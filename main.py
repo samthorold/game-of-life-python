@@ -1,11 +1,5 @@
 """
 http://pi.math.cornell.edu/~lipa/mec/lesson6.html
-
-Game has "generations" - like a "turn".
-
-The game "board" is an infinite 2D grid.
-
-Each cell has 8 "neighbours", including diagonal.
 """
 
 from __future__ import annotations
@@ -44,14 +38,9 @@ class Cell:
 
 
 class Board:
-
     @staticmethod
     def from_string(
-        string: str,
-        size: int,
-        delim=None,
-        alive: str = "x",
-        offset=(0, 0)
+        string: str, size: int, delim=None, alive: str = "x", offset=(0, 0)
     ) -> Board:
         yoff, xoff = offset
         state: list[tuple[int, int]] = []
@@ -152,8 +141,7 @@ if __name__ == "__main__":
             b = Board.from_string(string, size=args.size, offset=offset)
     else:
         initial_state = [
-            tuple([int(x) for x in s.split(",")])
-            for s in args.initial_state.split(";")
+            tuple([int(x) for x in s.split(",")]) for s in args.initial_state.split(";")
         ]
         b = Board(initial_state, size)
     print(b)
