@@ -8,8 +8,13 @@ import argparse
 from dataclasses import dataclass
 import time
 
+import reader
+
+
 parser = argparse.ArgumentParser()
-parser.add_argument("initial_state", help="E.g. '1,1;3,2'")
+parser.add_argument("--string")
+parser.add_argument("--path", default="gol_patterns/1beacon.rle")
+parser.add_argument("--type", default="rle")
 parser.add_argument("--size", type=int, default=16, help="Board size")
 parser.add_argument("--offset", default="0,0", help="Offset: (from top, from left)")
 parser.add_argument("-N", "--iterations", type=int, default=15)
@@ -49,9 +54,9 @@ class Board:
             for x, alv in enumerate(row):
                 if alv == alive:
                     state.append((y + yoff, x + xoff))
-        return Board(state=state, size=size)
+        return Board(state=tuple(state), size=size)
 
-    def __init__(self, state: list[tuple[int, int]], size: int = 16):
+    def __init__(self, state: tuple[tuple[int, int]], size: int = 16):
         self.size = size
 
         cells: list[list[Cell]] = []
@@ -133,16 +138,19 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     size = args.size
-    if "," not in args.initial_state:
-        path = f"states/{args.initial_state}"
-        with open(path) as f:
+
+    if args.string is None:
+        with open(args.path) as f:
             string = f.read()
-            offset = tuple([int(x) for x in args.offset.split(",")])
-            b = Board.from_string(string, size=args.size, offset=offset)
+        cell_res = getattr(reader, args.type)(string)
+        b = Board(cell_res.to_xy(), size)
     else:
-        initial_state = [
-            tuple([int(x) for x in s.split(",")]) for s in args.initial_state.split(";")
-        ]
+        initial_state = tuple(
+            [
+                tuple([int(x) for x in s.split(",")])
+                for s in args.initial_state.split(";")
+            ]
+        )
         b = Board(initial_state, size)
     print(b)
     for i in range(args.iterations):

@@ -41,6 +41,9 @@ class Cell:
 class CellsResult:
     cells: tuple[Cell]
 
+    def to_xy(self) -> tuple[tuple[int, int]]:
+        return tuple([(c.y, c.x) for c in self.cells])
+
 
 def identify_line(line: str) -> LineType:
     if line.startswith("#N"):
