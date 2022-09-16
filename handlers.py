@@ -48,7 +48,7 @@ class CellsResult:
 def identify_line(line: str) -> LineType:
     if line.startswith("#N"):
         return LineType.NAME
-    if line.startswith("#C"):
+    if any(line.startswith(s) for s in ["#C", "#O"]):
         return LineType.COMMENT
     if "," in line:
         return LineType.HEADER
