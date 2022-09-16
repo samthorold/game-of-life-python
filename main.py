@@ -77,8 +77,8 @@ class Board:
     def __init__(
         self, state: Sequence[tuple[int, int]], height: int = 16, width: int = 16
     ):
-        self.height = height
-        self.width = width
+        self.height = max(max([y for y, _ in state]), height)
+        self.width = max(max([x for _, x in state]), width)
         self.cells: list[list[Cell]] = []
 
         rows = []
