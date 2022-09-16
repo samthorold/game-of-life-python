@@ -22,6 +22,18 @@ parser.add_argument("-N", "--iterations", type=int, default=15)
 parser.add_argument("--delay", type=float, default=0)
 
 
+OPPOSITE_DIRECTION = [
+    ("n", "s"),
+    ("ne", "sw"),
+    ("e", "w"),
+    ("se", "nw"),
+    ("s", "n"),
+    ("sw", "ne"),
+    ("w", "e"),
+    ("nw", "se"),
+]
+
+
 @dataclass
 class Cell:
     n: Cell | None = None
@@ -41,6 +53,11 @@ class Cell:
             if neighbour and neighbour.alive:
                 neighbours.append(neighbour)
         return neighbours
+
+    def tell_neighbours_removed(self):
+        for addr, friend in OPPOSITE_DIRECTION:
+            if getattr(self, addr) is not None:
+                setattr(getattr(self, addr), friend, None)
 
 
 class Board:
@@ -101,6 +118,7 @@ class Board:
                 if col < (self.width - 1):
                     c.ne = self.cells[row - 1][col + 1]
                     self.cells[row - 1][col + 1].sw = c
+
             # E/W
             if col > 0:
                 c.w = self.cells[row][col - 1]
@@ -112,7 +130,6 @@ class Board:
 
     def append_col(self, state: Sequence[int] | None = None) -> list[Cell]:
         state = [] if state is None else state
-        col = len(self.cells[0])
 
         for row in range(self.height):
             c = Cell()
@@ -121,15 +138,19 @@ class Board:
                 c.alive = True
             # N/S
             if row > 0:
-                c.n = self.cells[row - 1][col]
-                self.cells[row - 1][col].s = c
+                # N/S
+                c.n = self.cells[row - 1][-1]
+                self.cells[row - 1][-1].s = c
                 # NW/SE
-                c.nw = self.cells[row - 1][col - 1]
-                self.cells[row - 1][col - 1].se = c
+                c.nw = self.cells[row - 1][-2]
+                self.cells[row - 1][-2].se = c
+                # NE/SW - for the like previously appended col
+                self.cells[row][-2].ne = self.cells[row - 1][-1]
+                self.cells[row - 1][-1].sw = self.cells[row][-2]
 
             # E/W
-            c.w = self.cells[row][col - 1]
-            self.cells[row][col - 1].e = c
+            c.w = self.cells[row][-2]
+            self.cells[row][-2].e = c
 
         self.width = max(self.width, len(self.cells[0]))
 
@@ -147,15 +168,14 @@ class Board:
             c.s = self.cells[1][col]
             self.cells[1][col].n = c
             # NW/SE
+            if col < self.width - 1:
+                c.se = self.cells[1][col + 1]
+                self.cells[1][col + 1].nw = c
+            # NE/SW
             if col > 0:
-                c.se = self.cells[1][col - 1]
-                self.cells[1][col - 1].nw = c
-            # NE / SW
-            if col < (self.width - 1):
-                c.sw = self.cells[1][col + 1]
-                self.cells[1][col + 1].ne = c
-            # E/W
-            if col > 0:
+                c.sw = self.cells[1][col - 1]
+                self.cells[1][col - 1].ne = c
+
                 c.w = self.cells[0][col - 1]
                 self.cells[0][col - 1].e = c
 
@@ -167,25 +187,28 @@ class Board:
         state = [] if state is None else state
 
         for row in range(self.height):
-            # print(f"prepend_col {row=}")
             c = Cell()
             self.cells[row] = [c] + self.cells[row]
             if row in state:
                 c.alive = True
             # N/S
             if row > 0:
-                c.n = self.cells[row - 1][1]
-                self.cells[row - 1][1].s = c
+                c.n = self.cells[row - 1][0]
+                self.cells[row - 1][0].s = c
                 # NE/SW
                 c.ne = self.cells[row - 1][1]
                 self.cells[row - 1][1].sw = c
+                # NW/SE
+                self.cells[row][1].nw = self.cells[row - 1][0]
+                self.cells[row - 1][0].se = self.cells[row][1]
 
+            # E/W
             c.e = self.cells[row][1]
             self.cells[row][1].w = c
 
         self.width = max(self.width, len(self.cells[0]))
 
-        return [r[-1] for r in self.cells]
+        return [r[0] for r in self.cells]
 
     def __str__(self) -> str:
         s = ""
@@ -251,20 +274,38 @@ class Board:
         bottom = any(c.alive for c in self.cells[-1])
         return left, top, right, bottom
 
-    def fit_board_to_cells(self) -> bool:
-        ltrb = self.check_perimeter_alive()
-        if not any(ltrb):
-            return False
-        l, t, r, b = ltrb
+    def pop_row(self, end: bool = True) -> None:
+        idx = -1 if end else 0
+        for c in self.cells[idx]:
+            c.tell_neighbours_removed()
+        self.cells = self.cells[:-1] if end else self.cells[1:]
+        self.height -= 1
 
-        if l:
-            self.prepend_col()
-        if t:
-            self.prepend_row()
-        if r:
-            self.append_col()
-        if b:
-            self.append_row()
+    def pop_col(self, end: bool = True) -> None:
+        idx = -1 if end else 0
+        for row_idx, row in enumerate(self.cells):
+            row[idx].tell_neighbours_removed()
+            self.cells[row_idx] = (
+                self.cells[row_idx][:-1] if end else self.cells[row_idx][1:]
+            )
+        self.width -= 1
+
+    def fit_board_to_cells(self) -> bool:
+        for _ in range(3):
+            l, t, r, b = self.check_perimeter_alive()
+            if not l:
+                self.pop_col(end=False)
+            if not t:
+                self.pop_row(end=False)
+            if not r:
+                self.pop_col(end=True)
+            if not b:
+                self.pop_row(end=True)
+
+        self.prepend_col()
+        self.prepend_row()
+        self.append_col()
+        self.append_row()
 
         return True
 
