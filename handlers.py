@@ -42,7 +42,7 @@ class CellsResult:
     cells: tuple[Cell]
 
     def to_xy(self) -> tuple[tuple[int, int]]:
-        return tuple([(c.y, c.x) for c in self.cells])
+        return tuple([(c.y, c.x) for c in self.cells if c.alive])
 
 
 def identify_line(line: str) -> LineType:
@@ -94,14 +94,18 @@ def parse_comment(string: str) -> str:
 
 
 def parse_cells(string: str) -> tuple[tuple[int, int, bool], ...]:
-    x = y = 0
+    x = y = width = 0
     ns = ""
     cells = []
     for ch in string:
+        if ch == "!":
+            while x < width:
+                cells.append((x, y, False))
+                x += 1
         if ch == "$":
-            y += 1
+            y += int(ns or 1)
             x = 0
-            continue
+            ns = ""
         if ch in "123456789":
             ns += ch
         if ch in "bo":
@@ -109,6 +113,7 @@ def parse_cells(string: str) -> tuple[tuple[int, int, bool], ...]:
             for _ in range(int(ns or 1)):
                 cells.append((x, y, alive))
                 x += 1
+                width = max(x, width)
             ns = ""
     return tuple(cells)
 

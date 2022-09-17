@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--string")
 parser.add_argument("--path", default="gol_patterns/1beacon.rle")
 parser.add_argument("--type", default="rle")
-parser.add_argument("--size", type=int, default=16, help="Board size")
+parser.add_argument("--size", type=int, default=1, help="Board size")
 parser.add_argument("--offset", default="0,0", help="Offset: (from top, from left)")
 parser.add_argument("-N", "--iterations", type=int, default=15)
 parser.add_argument("--delay", type=float, default=0)
@@ -75,17 +75,16 @@ class Board:
         return Board(state=state, height=size, width=size)
 
     def __init__(
-        self, state: Sequence[tuple[int, int]], height: int = 16, width: int = 16
+        self, state: Sequence[tuple[int, int]], height: int = 1, width: int = 1
     ):
-        self.height = max(max([y for y, _ in state]), height)
-        self.width = max(max([x for _, x in state]), width)
+        self.height = max(max([y for y, _ in state]) + 1, height)
+        self.width = max(max([x for _, x in state]) + 1, width)
+
         self.cells: list[list[Cell]] = []
 
-        rows = []
+        rows = [[] for _ in range(self.height)]
 
         for row_idx, col_idx in state:
-            while len(rows) - 1 < row_idx:
-                rows.append([])
             rows[row_idx].append(col_idx)
 
         for row in rows:
