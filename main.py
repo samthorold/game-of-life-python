@@ -257,9 +257,6 @@ class Board:
                     changed = True
                 cell.alive = cell_status
 
-        if fit_board:
-            self.fit_board_to_cells()
-
         return changed
 
     def check_perimeter_alive(self) -> tuple[bool, bool, bool, bool]:
