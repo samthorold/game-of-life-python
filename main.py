@@ -16,7 +16,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--string")
 parser.add_argument("--path", default="gol_patterns/1beacon.rle")
 parser.add_argument("--type", default="rle")
-parser.add_argument("--size", type=int, default=1, help="Board size")
 parser.add_argument("--offset", default="0,0", help="Offset: (from top, from left)")
 parser.add_argument("-N", "--iterations", type=int, default=15)
 parser.add_argument("--delay", type=float, default=0)
@@ -61,11 +60,9 @@ class Cell:
 
 
 class Board:
-    def __init__(
-        self, state: Sequence[tuple[int, int]], height: int = 1, width: int = 1
-    ):
-        self.height = max(max([y for y, _ in state]) + 1, height)
-        self.width = max(max([x for _, x in state]) + 1, width)
+    def __init__(self, state: Sequence[tuple[int, int]]):
+        self.height = max([y for y, _ in state]) + 1
+        self.width = max([x for _, x in state]) + 1
 
         self.cells: list[list[Cell]] = []
 
@@ -297,13 +294,12 @@ if __name__ == "__main__":
     print("Game of Life")
 
     args = parser.parse_args()
-    size = args.size
 
     if args.string is None:
         with open(args.path) as f:
             string = f.read()
         alive_cells = getattr(reader, args.type)(string)
-        b = Board(alive_cells, size, size)
+        b = Board(alive_cells)
     else:
         initial_state = tuple(
             [
@@ -311,7 +307,7 @@ if __name__ == "__main__":
                 for s in args.initial_state.split(";")
             ]
         )
-        b = Board(initial_state, size, size)
+        b = Board(initial_state)
     print(b)
     for i in range(args.iterations):
         if args.delay:
