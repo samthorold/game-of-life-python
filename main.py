@@ -61,19 +61,6 @@ class Cell:
 
 
 class Board:
-    @staticmethod
-    def from_string(
-        string: str, size: int, delim=None, alive: str = "x", offset=(0, 0)
-    ) -> Board:
-        yoff, xoff = offset
-        state: list[tuple[int, int]] = []
-        rows = string.split(delim)
-        for y, row in enumerate(rows):
-            for x, alv in enumerate(row):
-                if alv == alive:
-                    state.append((y + yoff, x + xoff))
-        return Board(state=state, height=size, width=size)
-
     def __init__(
         self, state: Sequence[tuple[int, int]], height: int = 1, width: int = 1
     ):
