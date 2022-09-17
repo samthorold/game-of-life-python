@@ -318,8 +318,8 @@ if __name__ == "__main__":
     if args.string is None:
         with open(args.path) as f:
             string = f.read()
-        cell_res = getattr(reader, args.type)(string)
-        b = Board(cell_res.to_xy(), size, size)
+        alive_cells = getattr(reader, args.type)(string)
+        b = Board(alive_cells, size, size)
     else:
         initial_state = tuple(
             [
