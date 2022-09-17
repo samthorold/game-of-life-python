@@ -33,7 +33,7 @@ def parse_rle_line(string: str) -> tuple[tuple[int, int, bool], ...]:
     return tuple(cells)
 
 
-def rle(string: str) -> tuple[tuple[int, int]]:
+def rle(string: str) -> tuple[tuple[int, int], ...]:
     cells: list[tuple[int, int]] = []
     for line in string.split("\n"):
         if is_rle_cells_line(line := line.strip()):

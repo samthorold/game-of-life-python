@@ -66,7 +66,7 @@ class Board:
 
         self.cells: list[list[Cell]] = []
 
-        rows = [[] for _ in range(self.height)]
+        rows: list[list[int]] = [[] for _ in range(self.height)]
 
         for row_idx, col_idx in state:
             rows[row_idx].append(col_idx)
@@ -141,7 +141,7 @@ class Board:
 
     def prepend_row(self, state: Sequence[int] | None = None) -> list[Cell]:
         state = [] if state is None else state
-        self.cells = [[]] + self.cells
+        self.cells.insert(0, [])
         for col in range(self.width):
             c = Cell()
             self.cells[0].append(c)
@@ -171,7 +171,7 @@ class Board:
 
         for row in range(self.height):
             c = Cell()
-            self.cells[row] = [c] + self.cells[row]
+            self.cells[row].insert(0, c)
             if row in state:
                 c.alive = True
             # N/S
@@ -298,16 +298,10 @@ if __name__ == "__main__":
     if args.string is None:
         with open(args.path) as f:
             string = f.read()
-        alive_cells = getattr(reader, args.type)(string)
-        b = Board(alive_cells)
     else:
-        initial_state = tuple(
-            [
-                tuple([int(x) for x in s.split(",")])
-                for s in args.initial_state.split(";")
-            ]
-        )
-        b = Board(initial_state)
+        string = args.string
+    alive_cells = getattr(reader, args.type)(string)
+    b = Board(alive_cells)
     print(b)
     for i in range(args.iterations):
         if args.delay:
