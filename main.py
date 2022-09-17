@@ -30,6 +30,7 @@ if __name__ == "__main__":
             string = f.read()
     else:
         string = args.string
+    print(string)
     alive_cells = getattr(reader, args.type)(string)
     b = models.Board(alive_cells)
     print(b)
@@ -37,6 +38,7 @@ if __name__ == "__main__":
         if args.delay:
             time.sleep(args.delay)
         changed = b.next_generation()
+        print(i + 1)
         print(b)
         if not changed or b.all_dead:
             break
