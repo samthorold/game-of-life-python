@@ -67,6 +67,11 @@ class Board:
         for row in rows:
             self.append_row(row)
 
+        self.prepend_col()
+        self.prepend_row()
+        self.append_col()
+        self.append_row()
+
         while len(self.cells[0]) < self.width:
             self.append_col()
 
@@ -220,59 +225,41 @@ class Board:
     def next_generation(self, fit_board: bool = True) -> bool:
         self.previous_states.append(hash(self))
 
-        if fit_board:
-            self.fit_board_to_cells()
+        # if fit_board:
+        #     self.fit_board_to_cells()
+        max_row = len(self.cells) - 1
+        max_col = len(self.cells[0]) - 1
+        prepend_row = append_row = prepend_col = append_col = False
         alive: list[list[bool]] = []
         for y, row in enumerate(self.cells):
             alive.append([])
             for cell in row:
                 alive[y].append(cell.alive_next_generation)
         changed = False
-        for row_status, row in zip(alive, self.cells):
-            for cell_status, cell in zip(row_status, row):
+        for row_idx, (row_status, row) in enumerate(zip(alive, self.cells)):
+            for col_idx, (cell_status, cell) in enumerate(zip(row_status, row)):
                 if cell.alive != cell_status:
                     changed = True
                     cell.update_status(cell_status)
+                    # if making a cell on the perimeter alive
+                    # need buffer of dead cells around it
+                    if cell_status:
+                        if row_idx == 0:
+                            prepend_row = True
+                        if row_idx == max_row:
+                            append_row = True
+                        if col_idx == 0:
+                            prepend_col = True
+                        if col_idx == max_col:
+                            append_col = True
+
+        if prepend_row:
+            self.prepend_row()
+        if append_row:
+            self.append_row()
+        if prepend_col:
+            self.prepend_col()
+        if append_col:
+            self.append_col()
 
         return changed
-
-    def check_perimeter_alive(self) -> tuple[bool, bool, bool, bool]:
-        left = right = False
-        for row in self.cells:
-            if row[0].alive:
-                left = True
-            if row[-1].alive:
-                right = True
-        top = any(c.alive for c in self.cells[0])
-        bottom = any(c.alive for c in self.cells[-1])
-        return left, top, right, bottom
-
-    def pop_row(self, end: bool = True) -> None:
-        idx = -1 if end else 0
-        for c in self.cells[idx]:
-            c.tell_neighbours_removed()
-        self.cells = self.cells[:-1] if end else self.cells[1:]
-        self.height -= 1
-
-    def pop_col(self, end: bool = True) -> None:
-        idx = -1 if end else 0
-        for row_idx, row in enumerate(self.cells):
-            row[idx].tell_neighbours_removed()
-            self.cells[row_idx] = (
-                self.cells[row_idx][:-1] if end else self.cells[row_idx][1:]
-            )
-        self.width -= 1
-
-    def fit_board_to_cells(self) -> bool:
-
-        l, t, r, b = self.check_perimeter_alive()
-        if l:
-            self.prepend_col()
-        if t:
-            self.prepend_row()
-        if r:
-            self.append_col()
-        if b:
-            self.append_row()
-
-        return True
