@@ -8,5 +8,5 @@ b = models.Board(reader.rle(string))
 
 while True:
     changed = b.next_generation()
-    if b.state_seen_before:
+    if b.repeated_previous_states:
         break

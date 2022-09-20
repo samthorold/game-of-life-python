@@ -29,5 +29,5 @@ if __name__ == "__main__":
         changed = b.next_generation()
         print(i + 1)
         print(b)
-        if (not changed or b.all_dead) or b.state_seen_before:
+        if b.repeated_previous_states:
             break

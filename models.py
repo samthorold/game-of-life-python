@@ -29,14 +29,6 @@ class Cell:
     alive: bool = False
     nfriends: int = 0
 
-    def alive_neighbours(self):
-        neighbours: list[Cell] = []
-        for neighbour_addr in "n ne e se s sw w nw".split():
-            neighbour = getattr(self, neighbour_addr)
-            if neighbour and neighbour.alive:
-                neighbours.append(neighbour)
-        return neighbours
-
     def update_status(self, value: bool) -> None:
         for neighbour_addr in "n ne e se s sw w nw".split():
             neighbour: Cell = getattr(self, neighbour_addr)
@@ -51,21 +43,6 @@ class Cell:
     @property
     def alive_next_generation(self) -> bool:
         return self.nfriends in [2, 3] if self.alive else self.nfriends == 3
-        # if self.alive:
-        #     return len(self.alive_neighbours()) in [2, 3]
-        # return len(self.alive_neighbours()) == 3
-
-        # alive_count = 0
-        # for neighbour_addr in "n ne e se s sw w nw".split():
-        #     neighbour = getattr(self, neighbour_addr)
-        #     if neighbour and neighbour.alive:
-        #         alive_count += 1
-        #         if alive_count > 3:
-        #             return False
-        # if self.alive:
-        #     if alive_count > 1:
-        #         return True
-        # return alive_count == 3
 
     def tell_neighbours_removed(self):
         for addr, friend in OPPOSITE_DIRECTION:
@@ -100,8 +77,8 @@ class Board:
         return hash(tuple(tuple(cell.alive for cell in row) for row in self.cells))
 
     @property
-    def state_seen_before(self):
-        return hash(self) in self.previous_states
+    def repeated_previous_states(self):
+        return self.previous_states[-1] in self.previous_states[:-1]
 
     def append_row(self, state: Sequence[int] | None = None) -> list[Cell]:
         state = [] if state is None else state
@@ -114,9 +91,7 @@ class Board:
                 c.alive = True
             # N/S
             if row > 0:
-                # c.n = self.cells[row - 1][col]
                 c.set_neighbour("n", self.cells[row - 1][col])
-                # self.cells[row - 1][col].s = c
                 self.cells[row - 1][col].set_neighbour("s", c)
                 # NW/SE
                 if col > 0:
@@ -289,7 +264,7 @@ class Board:
         self.width -= 1
 
     def fit_board_to_cells(self) -> bool:
-        for _ in range(3):
+        for _ in range(2):
             l, t, r, b = self.check_perimeter_alive()
             if not l:
                 self.pop_col(end=False)
