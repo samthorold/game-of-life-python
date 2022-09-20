@@ -4,3 +4,5 @@ venv/
 gol_patterns/
 
 .DS_Store
+
+*.prof
