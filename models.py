@@ -264,20 +264,15 @@ class Board:
         self.width -= 1
 
     def fit_board_to_cells(self) -> bool:
-        for _ in range(2):
-            l, t, r, b = self.check_perimeter_alive()
-            if not l:
-                self.pop_col(end=False)
-            if not t:
-                self.pop_row(end=False)
-            if not r:
-                self.pop_col(end=True)
-            if not b:
-                self.pop_row(end=True)
 
-        self.prepend_col()
-        self.prepend_row()
-        self.append_col()
-        self.append_row()
+        l, t, r, b = self.check_perimeter_alive()
+        if l:
+            self.prepend_col()
+        if t:
+            self.prepend_row()
+        if r:
+            self.append_col()
+        if b:
+            self.append_row()
 
         return True
