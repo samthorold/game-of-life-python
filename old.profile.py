@@ -1,7 +1,7 @@
 import models
 import reader
 
-with open("my_patterns/1.rle") as f:
+with open("gol_patterns/windmill.rle") as f:
     string = f.read()
 
 b = models.Board(reader.rle(string))
